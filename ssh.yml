@@ -2,7 +2,7 @@
 - name: Setup Passwordless SSH
   hosts: all
   become: yes
-  gather_facts: no
+  gather_facts: yes
 
   tasks:
   - name: Install sshpass (Debian/Ubuntu)
