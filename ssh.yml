@@ -1,0 +1,26 @@
+---
+- name: Setup Passwordless SSH
+  hosts: all
+  become: yes
+  gather_facts: no
+
+  tasks:
+  - name: Install sshpass (Debian/Ubuntu)
+    apt:
+      name: sshpass
+      state: present
+    when: ansible_os_family == "Debian"
+
+  - name: Check for existing SSH keys
+    stat:
+      path: "~/.ssh/id_rsa"
+    register: ssh_key_check
+
+  - name: Generate SSH key
+    command: ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -q -N ""
+    when: not ssh_key_check.stat.exists
+
+  - name: Copy public key to remote hosts
+    shell: "sshpass -p '{{ ssh_password }}' ssh-copy-id -i ~/.ssh/id_rsa.pub -o StrictHostKeyChecking=no {{ item }}"
+    with_items: "{{ groups['all'] }}"
+    ignore_errors: yes
